@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+python-multipart
+pillow
+opencv-python
+numpy
+torch
+torchvision
+# vietocr (using local folder)
+einops
+gdown
+pyyaml
+firebase-admin
+cloudinary
+sqlalchemy
+psycopg2-binary
+redis

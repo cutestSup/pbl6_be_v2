@@ -1,9 +1,9 @@
 import sys
 import os
 
-vietocr_path = os.path.join(os.path.dirname(__file__), "..", "..", "vietocr")
-if vietocr_path not in sys.path:
-    sys.path.insert(0, vietocr_path)
+# vietocr_path = os.path.join(os.path.dirname(__file__), "..", "..", "vietocr")
+# if vietocr_path not in sys.path:
+#     sys.path.insert(0, vietocr_path)
 
 from vietocr.tool.predictor import Predictor
 from vietocr.tool.config import Cfg

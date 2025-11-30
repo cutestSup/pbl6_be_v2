@@ -32,9 +32,10 @@ test/
 tests/
 *.test.py
 
-# Bỏ qua documentation
-*.md
+# Bỏ qua documentation (nhưng giữ vietocr/README.md cho setup.py)
 docs/
+README.md
+!vietocr/README.md
 
 # Bỏ qua deployment files không cần
 render.yaml

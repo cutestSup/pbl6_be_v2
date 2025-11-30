@@ -10,6 +10,9 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy and install VietOCR local package
+COPY vietocr /app/vietocr
+RUN cd vietocr && pip install -e .
 
 COPY . .
 RUN python download_weights.py

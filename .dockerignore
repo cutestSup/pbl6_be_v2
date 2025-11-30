@@ -1,0 +1,41 @@
+# Bỏ qua thư mục môi trường ảo local (Rất quan trọng)
+venv/
+env/
+.venv/
+
+# Bỏ qua git
+.git/
+.gitignore
+
+# Bỏ qua cache python
+__pycache__/
+*.py[cod]
+*.so
+
+# Bỏ qua các file nặng không cần thiết khi build
+*.mp4
+*.avi
+logs/
+.vscode/
+.idea/
+
+# Bỏ qua model weights local (sẽ download khi deploy)
+app/weights/*.pth
+app/weights/*.pt
+
+# Bỏ qua Firebase key local
+app/config/firebase-key.json
+
+# Bỏ qua các file test
+test/
+tests/
+*.test.py
+
+# Bỏ qua documentation
+*.md
+docs/
+
+# Bỏ qua deployment files không cần
+render.yaml
+fly.toml
+cloudbuild.yaml

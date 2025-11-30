@@ -15,10 +15,10 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# --- SỬA LỖI Ở ĐÂY ---
-# Chỉ copy thư mục vietocr vào, KHÔNG chạy lệnh pip install -e . nữa
+# Copy và install VietOCR package
 COPY vietocr /app/vietocr
-# ---------------------
+WORKDIR /app/vietocr
+RUN pip install -e .
 
 # Quay lại thư mục làm việc chính
 WORKDIR /app
@@ -26,11 +26,8 @@ WORKDIR /app
 # Copy toàn bộ mã nguồn còn lại
 COPY . .
 
-# Tải Model Weights
-RUN python download_weights.py
-
 # Mở port 8000
 EXPOSE 8000
 
-# Lệnh chạy server
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Tải Model Weights khi container khởi động (thay vì lúc build)
+CMD python download_weights.py && uvicorn app.main:app --host 0.0.0.0 --port 8000

@@ -41,9 +41,9 @@ app/config/firebase-key.json
 app/weights/*.pth
 app/weights/*.pt
 
-# Model configs
-app/config/icdar2015_resnet18_FPN_DBhead_polyLR.yaml
-app/config/myconfig.yml
+# Model configs (commented out - needed for deployment)
+# app/config/icdar2015_resnet18_FPN_DBhead_polyLR.yaml
+# app/config/myconfig.yml
 
 # Logs
 *.log

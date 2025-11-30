@@ -12,7 +12,15 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY vietocr /app/vietocr
+
+WORKDIR /app/vietocr
+RUN pip install -e . && pip list | grep vietocr
+
+WORKDIR /app
+
 COPY . .
+
 RUN python download_weights.py
 
 EXPOSE 8000

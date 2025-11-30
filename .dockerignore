@@ -3,9 +3,10 @@ venv/
 env/
 .venv/
 
-# Bỏ qua git
+# Bỏ qua git (nhưng giữ vietocr/setup.py)
 .git/
 .gitignore
+vietocr/.git/
 
 # Bỏ qua cache python
 __pycache__/

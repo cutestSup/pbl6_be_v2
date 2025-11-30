@@ -61,4 +61,3 @@ test/*
 
 .env.example
 .sunlint-cache/
-/vietocr

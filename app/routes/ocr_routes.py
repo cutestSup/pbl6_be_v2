@@ -11,12 +11,19 @@ import datetime
 
 router = APIRouter()
 
-pipeline = OCRPipeline(
-    dbnet_weight="app/weights/model_best_100_03.pth",
-    dbnet_cfg="app/config/icdar2015_resnet18_FPN_DBhead_polyLR.yaml",
-    vietocr_cfg="app/config/myconfig.yml",
-    vietocr_weight="app/weights/mymodelOCR.pth"
-)
+# Lazy load pipeline only when needed (saves RAM)
+pipeline = None
+
+def get_pipeline():
+    global pipeline
+    if pipeline is None:
+        pipeline = OCRPipeline(
+            dbnet_weight="app/weights/model_best_100_03.pth",
+            dbnet_cfg="app/config/icdar2015_resnet18_FPN_DBhead_polyLR.yaml",
+            vietocr_cfg="app/config/myconfig.yml",
+            vietocr_weight="app/weights/mymodelOCR.pth"
+        )
+    return pipeline
 
 @router.post("/upload")
 async def upload_image(
@@ -24,10 +31,16 @@ async def upload_image(
     file: UploadFile = File(..., description="Image file containing Vietnamese text"),
     db: Session = Depends(get_db)
 ):
+    """
+    Upload ảnh và OCR
+    
+    - **Guest** (không token): Vẫn xử lý OCR nhưng KHÔNG lưu vào DB
+    - **User** (có token): Xử lý OCR VÀ lưu vào DB
+    """
     firebase_user = await verify_firebase_token(request)  
 
     contents = await file.read()
-    res = pipeline.process(contents)
+    res = get_pipeline().process(contents)
     img_url = upload_image_bytes(contents, folder="ocr_uploads", resource_type="image")
     
     text_content = "\n".join([r["text"] for r in res["results"]])
@@ -94,6 +107,16 @@ async def get_ocr_history(
     limit: int = 10,
     offset: int = 0
 ):
+    """
+    Get OCR history for authenticated user
+    
+    **Query Parameters:**
+    - limit: Number of records to return (default: 10, max: 100)
+    - offset: Number of records to skip (default: 0)
+    
+    **Returns:**
+    - List of OCR records with pagination
+    """
     user = await verify_firebase_token(request)
     
     if not user:

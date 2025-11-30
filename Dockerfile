@@ -2,7 +2,6 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Set PYTHONPATH to include vietocr directory
 ENV PYTHONPATH=/app/vietocr:$PYTHONPATH
 
 RUN apt-get update && apt-get install -y \
@@ -12,12 +11,6 @@ RUN apt-get update && apt-get install -y \
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy and install VietOCR local package first
-COPY vietocr /app/vietocr
-WORKDIR /app/vietocr
-RUN pip install -e . && pip list | grep vietocr
-WORKDIR /app
 
 COPY . .
 RUN python download_weights.py

@@ -1,0 +1,9 @@
+import jwt
+
+token = "eyJhbGciOiJSUzI1NiIsImtpZCI6Ijk1MTg5MTkxMTA3NjA1NDM0NGUxNWUyNTY0MjViYjQyNWVlYjNhNWMiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vdGVzdC1kZTZiZSIsImF1ZCI6InRlc3QtZGU2YmUiLCJhdXRoX3RpbWUiOjE3NjQ5OTAyMzUsInVzZXJfaWQiOiJFVmNCc0xkdGNsWmxFVzZxd3hIcEpsdm5TZjEyIiwic3ViIjoiRVZjQnNMZHRjbFpsRVc2cXd4SHBKbHZuU2YxMiIsImlhdCI6MTc2NDk5MDIzNiwiZXhwIjoxNzY0OTkzODM2LCJlbWFpbCI6ImR1eWV0bGVtaW5oMjAwNEBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsiZHV5ZXRsZW1pbmgyMDA0QGdtYWlsLmNvbSJdfSwic2lnbl9pbl9wcm92aWRlciI6InBhc3N3b3JkIn19.qAxHVIpoqdUa2xVOs--qd-MaXDlJgQcc7e1tBZIF-GY0rtCcDdgBpAOzwzo1wViJ7pkZb3GN8kQf7KGU7lh3dDNTZPzCj5H34abmJ8Jo1-gU5RfWpVM5UYv2hFBxcdwQl7KTknbaDkQbkOtgczRYQveVfni4pspejRHLfPZuXcMPpvSTLrx1G9YBAlzvs4CICswUEaWzzhSUGLVjqnafyQcZEqCCkLJOEYjbkv4iXoQSLUcGrD0sw16b-zNfyZhFfdtyg4Prb7K8k3Bhh_WtJu7Zo3EhKATkh9mkAT0evXRIr9zsMtT8bGl6m0jbtn8hD3ti9qRu_r_77E2Mfd-NZQ" # Token của bạn
+
+# Decode không verify chữ ký (chỉ để xem nội dung)
+decoded_data = jwt.decode(token, options={"verify_signature": False})
+
+print(decoded_data)
+# Output: {'name': 'Nguyen Van A', 'email': '...', 'user_id': '...', ...}

@@ -20,6 +20,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Xóa dòng COPY vietocr và ENV PYTHONPATH đi vì không cần thiết nữa
 COPY . .
 
+# Thiết lập PYTHONPATH để Python tìm thấy các module trong thư mục gốc (bao gồm segmentation)
+ENV PYTHONPATH=/app
+
 # Mở port
 EXPOSE 8000
 

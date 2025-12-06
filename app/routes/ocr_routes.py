@@ -19,7 +19,7 @@ def get_pipeline():
     global pipeline
     if pipeline is None:
         pipeline = OCRPipeline(
-            dbnet_weight="app/weights/model_best_100_03.pth",
+            dbnet_weight="app/weights/model_best.pth",
             dbnet_cfg="app/config/icdar2015_resnet18_FPN_DBhead_polyLR.yaml",
             vietocr_cfg="app/config/myconfig.yml",
             vietocr_weight="app/weights/mymodelOCR.pth"

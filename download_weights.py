@@ -8,10 +8,10 @@ def download_weights():
     weights_dir = "app/weights"
     os.makedirs(weights_dir, exist_ok=True)
     
-    dbnet_path = os.path.join(weights_dir, "model_best_100_03.pth")
+    dbnet_path = os.path.join(weights_dir, "model_best.pth")
     if not os.path.exists(dbnet_path):
         print("📥 Downloading DBNet weights...")
-        dbnet_url = "https://drive.google.com/uc?id=1Wz-cZvZkY4Rv-9y3vT3YIe23bXhS3myq"
+        dbnet_url = "https://drive.google.com/uc?id=1hyoxmkccDPndPvAU84Ct6M5JHF-EzKeC"
         gdown.download(dbnet_url, dbnet_path, quiet=False)
     
     vietocr_path = os.path.join(weights_dir, "mymodelOCR.pth")

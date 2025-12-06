@@ -10,25 +10,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.models import SecurityScheme, SecuritySchemeType, HTTPBearer
 from fastapi.openapi.utils import get_openapi
-from contextlib import asynccontextmanager
 from app.routes import ocr_routes, test_routes, token_routes
 from app.firebase_init import initialize_firebase
 
 # Initialize Firebase Admin SDK
 initialize_firebase()
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Load the ML model
-    ocr_routes.initialize_pipeline()
-    yield
-    # Clean up the ML models and release the resources
-
 app = FastAPI(
     title="PBL6 OCR API",
     description="Vietnamese OCR API with DBNet + VietOCR",
     version="1.0.0",
-    lifespan=lifespan,
     swagger_ui_parameters={
         "persistAuthorization": True
     }
@@ -55,12 +46,6 @@ def custom_openapi():
             "description": "Enter your Firebase ID token"
         }
     }
-    
-    # Apply security globally to all endpoints
-    for path in openapi_schema["paths"]:
-        for method in openapi_schema["paths"][path]:
-            if method in ["get", "post", "put", "delete", "patch"]:
-                openapi_schema["paths"][path][method]["security"] = [{"Bearer": []}]
     
     app.openapi_schema = openapi_schema
     return app.openapi_schema

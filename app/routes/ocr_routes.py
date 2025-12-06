@@ -15,21 +15,15 @@ router = APIRouter()
 # Lazy load pipeline only when needed (saves RAM)
 pipeline = None
 
-def initialize_pipeline():
-    global pipeline
-    print("⏳ Initializing OCR Pipeline...")
-    pipeline = OCRPipeline(
-        dbnet_weight="app/weights/model_best.pth",
-        dbnet_cfg="app/config/icdar2015_resnet18_FPN_DBhead_polyLR.yaml",
-        vietocr_cfg="app/config/myconfig.yml",
-        vietocr_weight="app/weights/mymodelOCR.pth"
-    )
-    print("✅ OCR Pipeline initialized!")
-
 def get_pipeline():
     global pipeline
     if pipeline is None:
-        initialize_pipeline()
+        pipeline = OCRPipeline(
+            dbnet_weight="app/weights/model_best.pth",
+            dbnet_cfg="app/config/icdar2015_resnet18_FPN_DBhead_polyLR.yaml",
+            vietocr_cfg="app/config/myconfig.yml",
+            vietocr_weight="app/weights/mymodelOCR.pth"
+        )
     return pipeline
 
 @router.post("/upload")

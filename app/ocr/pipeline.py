@@ -3,6 +3,11 @@ import torch
 import cv2
 import time
 from PIL import Image
+
+# Fix for hanging on low-resource/cloud environments
+cv2.setNumThreads(0)
+torch.set_num_threads(1)
+
 from app.ocr.adaptive_preprocessor import AdaptivePreprocessor
 from app.ocr.dbnet_model import load_dbnet
 from app.ocr.vietocr_model import load_vietocr, recognize_text
@@ -187,7 +192,8 @@ class OCRPipeline:
         orig_h, orig_w = img_bgr.shape[:2]
         
         # 2. Preprocess
-        img_tensor, preprocessed_bgr, (target_h, target_w) = self.preprocessor.preprocess(img_bgr, 736)
+        # Reduced from 736 to 640 to prevent hanging on server
+        img_tensor, preprocessed_bgr, (target_h, target_w) = self.preprocessor.preprocess(img_bgr, 640)
         img_tensor = img_tensor.to(self.device)
         
         # 3. DBNet Inference

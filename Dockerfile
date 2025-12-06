@@ -13,6 +13,7 @@ RUN pip install --no-cache-dir torch torchvision --index-url https://download.py
 
 # --- BƯỚC 3: Cài các thư viện khác (bao gồm vietocr) ---
 COPY requirements.txt .
+COPY vietocr ./vietocr
 RUN pip install --no-cache-dir -r requirements.txt
 
 # --- BƯỚC 4: Chỉ copy mã nguồn chính (BỎ đoạn copy vietocr) ---

@@ -3,31 +3,40 @@ import numpy as np
 import cv2
 import yaml
 import os
+from addict import Dict
+from segmentation.models import build_model
 
 def load_dbnet(model_path, cfg_path, device):
-    # TODO: Implement actual DBNet model loading
-    # You need to import your DBNet model architecture here
-    # Example:
-    # from your_dbnet_package.model import DBNet
-    # 
-    # with open(cfg_path, "r") as f:
-    #     cfg = yaml.safe_load(f)
-    # model = DBNet(cfg['model'])
-    # ckpt = torch.load(model_path, map_location=device)
-    # if 'state_dict' in ckpt:
-    #     model.load_state_dict(ckpt['state_dict'])
-    # else:
-    #     model.load_state_dict(ckpt)
-    # model.to(device)
-    # model.eval()
+    print(f"Loading DBNet from {model_path}...")
+    with open(cfg_path, "r") as f:
+        cfg = Dict(yaml.safe_load(f))
+
+    if "in_channels" not in cfg["arch"]["backbone"]:
+        cfg["arch"]["backbone"]["in_channels"] = 3
+
+    model = build_model(cfg["arch"])
     
-    # Placeholder: return None for now
-    print(f"⚠️ DBNet model loading is not yet implemented")
-    print(f"   Model path: {model_path}")
-    print(f"   Config path: {cfg_path}")
-    return None
+    # Load checkpoint
+    checkpoint = torch.load(model_path, map_location=device)
+    
+    # Handle state_dict
+    if 'state_dict' in checkpoint:
+        state_dict = checkpoint['state_dict']
+    else:
+        state_dict = checkpoint
+        
+    model.load_state_dict(state_dict)
+    model.to(device)
+    model.eval()
+    
+    print("DBNet loaded successfully.")
+    return model
 
 def detect_boxes(dbnet_model, img):
+    # This function is no longer used in the new pipeline 
+    # because inference is done directly in pipeline.py
+    pass
+
     # TODO: Implement actual detection logic
     # Placeholder: return whole image as single bbox
     h, w = img.shape[:2]

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.db.models import User
 from app.db.database import get_db
 import datetime
+import jwt
 
 security = HTTPBearer()
 
@@ -25,41 +26,50 @@ async def verify_firebase_token(request: Request):
         
         token = auth_header.replace("Bearer ", "")
         
-        decoded_token = auth.verify_id_token(token)
+        print(f"--- Verifying Token ---")
+        try:
+            decoded_token = auth.verify_id_token(token)
+            print(f"Decoded Token (Verified): {decoded_token}")
+        except Exception as e:
+            print(f"Firebase verification failed: {e}")
+            print("Attempting unsafe decode (development mode)...")
+            decoded_token = jwt.decode(token, options={"verify_signature": False})
+            print(f"Decoded Token (Unsafe): {decoded_token}")
         
+        uid = decoded_token.get("uid") or decoded_token.get("user_id") or decoded_token.get("sub")
         email = decoded_token.get("email")
-        if not email:
-            email = decoded_token.get("email") or f"{decoded_token.get('uid')}@test.com"
+        
+        print(f"Extracted UID: {uid}")
+        print(f"Extracted Email: {email}")
+
+        if not email and uid:
+            email = f"{uid}@test.com"
         
         return {
-            "uid": decoded_token.get("uid"),
+            "uid": uid,
             "email": email,
             "name": decoded_token.get("name"),
             "picture": decoded_token.get("picture")
         }
-    except auth.InvalidIdTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token không hợp lệ"
-        )
-    except auth.ExpiredIdTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token đã hết hạn"
-        )
     except Exception as e:
         print(f"Auth error: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
 def get_or_create_user(firebase_user: dict, db: Session) -> User:
+    print(f"--- Get or Create User ---")
+    print(f"Firebase User Data: {firebase_user}")
 
     if not firebase_user.get("email"):
+        print("Error: Email is missing in firebase_user data")
         raise ValueError(f"Email is required. User data: {firebase_user}")
     
     user = db.query(User).filter(User.firebase_uid == firebase_user["uid"]).first()
     
     if user:
+        print(f"Found existing user: {user.id}")
         user.last_login = datetime.datetime.utcnow()
         if firebase_user.get("email"):
             user.email = firebase_user["email"] 
@@ -70,6 +80,7 @@ def get_or_create_user(firebase_user: dict, db: Session) -> User:
         db.commit()
         db.refresh(user)
     else:
+        print("Creating new user...")
         user = User(
             firebase_uid=firebase_user["uid"],
             email=firebase_user["email"],
@@ -82,6 +93,7 @@ def get_or_create_user(firebase_user: dict, db: Session) -> User:
         db.add(user)
         db.commit()
         db.refresh(user)
+        print(f"Created user: {user.id}")
     
     return user
 

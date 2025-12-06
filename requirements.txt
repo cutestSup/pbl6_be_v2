@@ -4,7 +4,8 @@ python-multipart
 pillow
 opencv-python
 numpy
-vietocr
+addict
+./vietocr
 einops
 gdown
 pyyaml
@@ -13,3 +14,4 @@ cloudinary
 sqlalchemy
 psycopg2-binary
 redis
+PyJWT

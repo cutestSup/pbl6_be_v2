@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Request, UploadFile, File, HTTPException, Depends
+from fastapi.responses import PlainTextResponse
 from app.auth_utils import verify_firebase_token, get_current_user, get_or_create_user
 # from app.utils.limit_utils import increment_guest, MAX_GUEST_SCAN  
 from app.ocr.pipeline import OCRPipeline
@@ -18,7 +19,7 @@ def get_pipeline():
     global pipeline
     if pipeline is None:
         pipeline = OCRPipeline(
-            dbnet_weight="app/weights/model_best_100_03.pth",
+            dbnet_weight="app/weights/model_best.pth",
             dbnet_cfg="app/config/icdar2015_resnet18_FPN_DBhead_polyLR.yaml",
             vietocr_cfg="app/config/myconfig.yml",
             vietocr_weight="app/weights/mymodelOCR.pth"
@@ -43,7 +44,7 @@ async def upload_image(
     res = get_pipeline().process(contents)
     img_url = upload_image_bytes(contents, folder="ocr_uploads", resource_type="image")
     
-    text_content = "\n".join([r["text"] for r in res["results"]])
+    text_content = res.get("full_text", "")
     text_url = upload_text_file(text_content, filename=f"result_{file.filename}.txt", folder="ocr_texts")
 
     if firebase_user:
@@ -59,12 +60,12 @@ async def upload_image(
         db.commit()
         db.refresh(rec)
 
-    return {"image_url": img_url, "text_url": text_url, "results": res["results"], "processing_time": res["processing_time"]}
+    return PlainTextResponse(text_content)
 
 
 @router.post("/auth/verify")
 async def verify_user_token(
-    request: Request, 
+    request: Request,
     db: Session = Depends(get_db)
 ):
     try:
@@ -97,6 +98,7 @@ async def verify_user_token(
         print(f"❌ Error in /auth/verify: {e}")
         import traceback
         traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
         raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
 
 

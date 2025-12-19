@@ -21,145 +21,74 @@ import yaml
 def clamp(val, lo, hi):
     return max(lo, min(hi, val))
 
-# ---------------------------
-# NHÓM LINES THEO Y (median-height based)
-# ---------------------------
-def group_lines_by_median(boxes, med_h_factor=0.6):
-    """
-    boxes: list of [x1,y1,x2,y2]
-    Trả về: list of lines, mỗi line là list of boxes (kept as [x1,y1,x2,y2])
-    """
-    if not boxes:
-        return []
-
-    arr = np.array(boxes, dtype=float)
-    y_centers = (arr[:,1] + arr[:,3]) / 2.0
-    heights = (arr[:,3] - arr[:,1])
-    median_h = float(np.median(heights)) if len(heights)>0 else 0.0
-    if median_h <= 0:
-        median_h = float(np.mean(heights)) if len(heights)>0 else 10.0
-
-    # sort by y_center
-    order = np.argsort(y_centers)
-    arr_sorted = arr[order]
-
-    y_thresh = median_h * med_h_factor
-
-    lines = []
-    current = [arr_sorted[0].tolist()]
-    current_mean_y = y_centers[order[0]]
-
-    for r in arr_sorted[1:]:
-        cy = (r[1] + r[3]) / 2.0
-        if abs(cy - current_mean_y) <= y_thresh:
-            current.append(r.tolist())
-            # update mean
-            current_mean_y = np.mean([ (b[1]+b[3])/2.0 for b in current ])
-        else:
-            lines.append(current)
-            current = [r.tolist()]
-            current_mean_y = cy
-    lines.append(current)
-
-    # Merge very close lines (to avoid over-splitting)
-    merged = []
-    for ln in lines:
-        if not merged:
-            merged.append(ln)
-            continue
-        prev = merged[-1]
-        prev_y = np.mean([ (b[1]+b[3])/2.0 for b in prev ])
-        cur_y = np.mean([ (b[1]+b[3])/2.0 for b in ln ])
-        if abs(cur_y - prev_y) < median_h * 0.45:  # merge threshold
-            merged[-1].extend(ln)
-        else:
-            merged.append(ln)
-
-    # inside each line sort boxes by x1 ascending (left -> right)
-    final_lines = []
-    for ln in merged:
-        ln_sorted = sorted(ln, key=lambda b: b[0])
-        final_lines.append([ [int(b[0]), int(b[1]), int(b[2]), int(b[3])] for b in ln_sorted ])
-
-    return final_lines
+def postprocess_text(text):
+    if not text: return ""
+    text = text.strip()
+    replacements = {'|': 'I', '[': '(', ']': ')'}
+    for k, v in replacements.items():
+        text = text.replace(k, v)
+    return text
 
 # ---------------------------
-# PHÁT HIỆN CỘT BẰNG GAP TRÊN X_CENTER
-# ---------------------------
-def detect_columns_by_x_gaps(lines, min_gap_factor=1.5):
-    """
-    lines: list of lines (each is list of boxes [x1,y1,x2,y2])
-    Ý tưởng: compute x_center for each line (mean of boxes), sort them; 
-    find big gaps -> define column boundaries
-    Trả về: list of columns, mỗi column là list of lines
-    """
-    if not lines:
-        return []
-
-    line_centers = [ np.mean([ (b[0]+b[2])/2.0 for b in line ]) for line in lines ]
-    sorted_idx = np.argsort(line_centers)
-    centers_sorted = [line_centers[i] for i in sorted_idx]
-
-    # nếu ít lines thì 1 cột
-    if len(centers_sorted) < 4:
-        return [ [lines[i] for i in sorted_idx] ]
-
-    # compute gaps between adjacent centers
-    gaps = [ centers_sorted[i+1] - centers_sorted[i] for i in range(len(centers_sorted)-1) ]
-    median_gap = np.median(gaps) if gaps else 0.0
-    if median_gap <= 0:
-        median_gap = np.mean(gaps) if gaps else 50.0
-
-    # find split points where gap is significantly larger than typical
-    split_indices = []
-    threshold = median_gap * min_gap_factor
-    for i,g in enumerate(gaps):
-        if g > threshold:
-            split_indices.append(i)
-
-    # build boundaries over sorted_idx
-    columns = []
-    start = 0
-    for si in split_indices:
-        group_idx = sorted_idx[start:si+1]
-        columns.append([ lines[i] for i in group_idx ])
-        start = si+1
-    # last group
-    group_idx = sorted_idx[start: len(sorted_idx)]
-    columns.append([ lines[i] for i in group_idx ])
-
-    # sort lines inside each column by y (top -> bottom)
-    for col in columns:
-        col.sort(key=lambda ln: np.mean([ (b[1]+b[3])/2.0 for b in ln ]))
-
-    # sort columns left -> right by their mean x center
-    columns.sort(key=lambda col: np.mean([ np.mean([ (b[0]+b[2])/2.0 for b in ln ]) for ln in col for b in ln ]))
-    return columns
-
-# ---------------------------
-# TOÀN BỘ PIPELINE SẮP XẾP (LEFT->RIGHT reading order)
+# THUẬT TOÁN SẮP XẾP READING ORDER - DỰA VÀO Y CENTER
 # ---------------------------
 def sort_boxes_reading_order(boxes):
     """
-    boxes: list of [x1,y1,x2,y2]
-    Trả về: final_lines_ordered: list of lines (each line list of boxes)
-    Reading order implemented: iterate columns left->right, within column top->bottom
+    Sắp xếp boxes theo Y center với tolerance nhỏ.
     """
-    # 1) group into lines
-    lines = group_lines_by_median(boxes, med_h_factor=0.6)
-
-    # 2) detect columns using x gaps
-    columns = detect_columns_by_x_gaps(lines, min_gap_factor=1.6)
-
-    # 3) final assembly: for each column left->right, append its lines in top->bottom
+    if not boxes: return []
+    
+    # Filter small boxes
+    clean_boxes = []
+    for b in boxes:
+        if len(b) < 4: continue
+        x1, y1, x2, y2 = b[:4]
+        if x2 > x1 and y2 > y1 and (x2 - x1) >= 2 and (y2 - y1) >= 2:
+            if x1 == 0 and y1 == 0 and x2 == 0 and y2 == 0:
+                continue
+            clean_boxes.append([x1, y1, x2, y2])
+    if not clean_boxes: return []
+    
+    heights = [b[3] - b[1] for b in clean_boxes]
+    avg_h = np.median(heights) if heights else 10
+    # print(f"Median Box Height: {avg_h:.2f}")
+    
+    # Tính Y center cho mỗi box
+    boxes_with_cy = [(b, (b[1] + b[3]) / 2) for b in clean_boxes]
+    boxes_with_cy.sort(key=lambda x: (x[1], x[0][0]))  # Sort theo cy, rồi x1
+    
+    # Gom dòng: tìm dòng GẦN NHẤT có Y center distance <= 11 pixels
+    lines = []
+    threshold = 11.3
+    
+    for box, cy in boxes_with_cy:
+        # Tìm dòng GẦN NHẤT trong ngưỡng
+        best_line_idx = -1
+        best_distance = threshold + 1
+        
+        for idx, line in enumerate(lines):
+            line_cy_avg = np.mean([(b[1] + b[3]) / 2 for b in line])
+            distance = abs(cy - line_cy_avg)
+            
+            if distance <= threshold and distance < best_distance:
+                best_distance = distance
+                best_line_idx = idx
+        
+        if best_line_idx >= 0:
+            lines[best_line_idx].append(box)
+        else:
+            lines.append([box])
+    
+    # Sắp xếp dòng theo Y, boxes trong dòng theo X
+    lines.sort(key=lambda line: np.mean([b[1] for b in line]))
+    
     final_lines = []
-    for col in columns:
-        # col already sorted by y
-        for ln in col:
-            # ensure boxes inside line sorted left->right
-            ln_sorted = sorted(ln, key=lambda b: b[0])
-            final_lines.append(ln_sorted)
-
+    for line in lines:
+        line.sort(key=lambda b: b[0])
+        final_lines.append(line)
+    
+    # print(f"Đã gom thành {len(final_lines)} dòng")
+    
     return final_lines
 
 class OCRPipeline:
@@ -243,6 +172,7 @@ class OCRPipeline:
                 
                 crop_pil = Image.fromarray(cv2.cvtColor(crop, cv2.COLOR_BGR2RGB))
                 text = recognize_text(self.vietocr, crop_pil)
+                text = postprocess_text(text)
                 
                 results.append({
                     "bbox": [x1, y1, x2, y2],

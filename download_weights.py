@@ -14,10 +14,10 @@ def download_weights():
         dbnet_url = "https://drive.google.com/uc?id=1hyoxmkccDPndPvAU84Ct6M5JHF-EzKeC"
         gdown.download(dbnet_url, dbnet_path, quiet=False)
     
-    vietocr_path = os.path.join(weights_dir, "mymodelOCR.pth")
+    vietocr_path = os.path.join(weights_dir, "myModelOCR.pth")
     if not os.path.exists(vietocr_path):
         print("📥 Downloading VietOCR weights...")
-        vietocr_url = "https://drive.google.com/uc?id=1AyhUYbFIdP_rL4PD0zmfpa1RzPKPwW5T"
+        vietocr_url = "https://drive.google.com/uc?id=1WKEH3xdXFiaxbtM7xLwGXkS2IJZNXxJ5"
         gdown.download(vietocr_url, vietocr_path, quiet=False)
     
     print("✅ All weights ready!")

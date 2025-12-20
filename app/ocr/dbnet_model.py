@@ -7,7 +7,7 @@ from addict import Dict
 from segmentation.models import build_model
 
 def load_dbnet(model_path, cfg_path, device):
-    print(f"Loading DBNet from {model_path}...")
+    # print(f"Loading DBNet from {model_path}...")
     with open(cfg_path, "r") as f:
         cfg = Dict(yaml.safe_load(f))
 
@@ -29,7 +29,7 @@ def load_dbnet(model_path, cfg_path, device):
     model.to(device)
     model.eval()
     
-    print("DBNet loaded successfully.")
+    # print("DBNet loaded successfully.")
     return model
 
 def detect_boxes(dbnet_model, img):

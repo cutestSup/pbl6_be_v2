@@ -6,14 +6,14 @@ from PIL import Image
 import numpy as np
 
 def load_vietocr(config_path, weights_path, device):
-    print(f"Loading VietOCR from {weights_path}...")
+    # print(f"Loading VietOCR from {weights_path}...")
     config = Cfg.load_config_from_file(config_path)
     config['weights'] = weights_path
     config['device'] = str(device)
     config['cnn']['pretrained'] = False
     
     model = Predictor(config)
-    print("VietOCR loaded successfully.")
+    # print("VietOCR loaded successfully.")
     return model
 
 def recognize_text(predictor, image):

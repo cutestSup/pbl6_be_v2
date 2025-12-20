@@ -26,21 +26,21 @@ async def verify_firebase_token(request: Request):
         
         token = auth_header.replace("Bearer ", "")
         
-        print(f"--- Verifying Token ---")
+        # print(f"--- Verifying Token ---")
         try:
             decoded_token = auth.verify_id_token(token)
-            print(f"Decoded Token (Verified): {decoded_token}")
+            # print(f"Decoded Token (Verified): {decoded_token}")
         except Exception as e:
             print(f"Firebase verification failed: {e}")
             print("Attempting unsafe decode (development mode)...")
             decoded_token = jwt.decode(token, options={"verify_signature": False})
-            print(f"Decoded Token (Unsafe): {decoded_token}")
+            # print(f"Decoded Token (Unsafe): {decoded_token}")
         
         uid = decoded_token.get("uid") or decoded_token.get("user_id") or decoded_token.get("sub")
         email = decoded_token.get("email")
         
-        print(f"Extracted UID: {uid}")
-        print(f"Extracted Email: {email}")
+        # print(f"Extracted UID: {uid}")
+        # print(f"Extracted Email: {email}")
 
         if not email and uid:
             email = f"{uid}@test.com"

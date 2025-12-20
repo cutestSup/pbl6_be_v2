@@ -85,12 +85,12 @@ class AdaptivePreprocessor:
         primary, characteristics = self.classify_image(metrics)
         strategy = self.adapt_strategy(primary, characteristics)
         
-        print(f"{primary.upper()}", end="")
-        if characteristics['is_high_contrast']: print(" + high_contrast", end="")
-        if characteristics['is_low_contrast']: print(" + low_contrast", end="")
-        if characteristics['is_blur']: print(" + blur", end="")
-        if characteristics['is_clear']: print(" + clear", end="")
-        print(f"Brightness={metrics['mean']:.0f}, Contrast={metrics['contrast']:.0f}")
+        # print(f"{primary.upper()}", end="")
+        # if characteristics['is_high_contrast']: print(" + high_contrast", end="")
+        # if characteristics['is_low_contrast']: print(" + low_contrast", end="")
+        # if characteristics['is_blur']: print(" + blur", end="")
+        # if characteristics['is_clear']: print(" + clear", end="")
+        # print(f"Brightness={metrics['mean']:.0f}, Contrast={metrics['contrast']:.0f}")
         
         gray = metrics['gray']
         

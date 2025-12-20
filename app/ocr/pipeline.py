@@ -126,13 +126,13 @@ class OCRPipeline:
         img_tensor = img_tensor.to(self.device)
         
         # 3. DBNet Inference
-        print("🔍 Running DBNet inference...")
+        # print("🔍 Running DBNet inference...")
         with torch.no_grad():
             preds = self.dbnet(img_tensor)
-        print("✅ DBNet inference done.")
+        # print("✅ DBNet inference done.")
             
         # 4. Post Process (Get Boxes)
-        print("⚙️ Post-processing boxes...")
+        # print("⚙️ Post-processing boxes...")
         batch = {"shape": [(orig_h, orig_w)]}
         boxes_list, scores = self.post_process(batch, preds, is_output_polygon=False)
         boxes = boxes_list[0] # First image in batch
@@ -159,7 +159,7 @@ class OCRPipeline:
         lines = sort_boxes_reading_order(boxes_xyxy)
         
         # 6. Recognize Text (VietOCR)
-        print(f"📖 Recognizing text for {len(lines)} lines...")
+        # print(f"📖 Recognizing text for {len(lines)} lines...")
         results = []
         final_lines_texts = []
         
@@ -183,10 +183,10 @@ class OCRPipeline:
                     line_texts.append(text)
             
             final_lines_texts.append(" ".join(line_texts))
-            if i % 5 == 0:
-                print(f"   Processed line {i+1}/{len(lines)}")
+            # if i % 5 == 0:
+            #     print(f"   Processed line {i+1}/{len(lines)}")
         
-        print("✅ OCR process completed.")
+        # print("✅ OCR process completed.")
         full_text = "\n".join([ln for ln in final_lines_texts if ln.strip() != ""])
         
         return {

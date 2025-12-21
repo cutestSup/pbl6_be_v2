@@ -2,22 +2,20 @@ import numpy as np
 import torch
 import cv2
 import time
+import os
 from PIL import Image
 
 # Fix for hanging on low-resource/cloud environments
 cv2.setNumThreads(0)
-torch.set_num_threads(1)
+torch.set_num_threads(4)
 
 from app.ocr.adaptive_preprocessor import SimpleTextPreprocessor
 from app.ocr.dbnet_model import load_dbnet
-from app.ocr.vietocr_model import load_vietocr, recognize_text
+from app.ocr.vietocr_model import load_vietocr, recognize_text, recognize_text_batch
 from segmentation.post_processing import get_post_processing
 from addict import Dict
 import yaml
 
-# ---------------------------
-# HÀM TIỆN ÍCH
-# ---------------------------
 def clamp(val, lo, hi):
     return max(lo, min(hi, val))
 
@@ -29,9 +27,6 @@ def postprocess_text(text):
         text = text.replace(k, v)
     return text
 
-# ---------------------------
-# THUẬT TOÁN SẮP XẾP READING ORDER - DỰA VÀO Y CENTER
-# ---------------------------
 def sort_boxes_reading_order(boxes):
     """
     Sắp xếp boxes theo Y center với tolerance nhỏ.
@@ -158,33 +153,50 @@ class OCRPipeline:
                 
         lines = sort_boxes_reading_order(boxes_xyxy)
         
-        # 6. Recognize Text (VietOCR)
+        # 6. Recognize Text (VietOCR) - BATCH PROCESSING
         # print(f"📖 Recognizing text for {len(lines)} lines...")
-        results = []
-        final_lines_texts = []
+        
+        all_crops = []
+        crop_map = [] # Stores (line_idx, box_idx, bbox)
         
         for i, ln in enumerate(lines):
-            line_texts = []
-            for (x1,y1,x2,y2) in ln:
+            for j, (x1,y1,x2,y2) in enumerate(ln):
                 crop = img_bgr[y1:y2, x1:x2]
                 if crop.size == 0:
                     continue
                 
                 crop_pil = Image.fromarray(cv2.cvtColor(crop, cv2.COLOR_BGR2RGB))
-                text = recognize_text(self.vietocr, crop_pil)
-                text = postprocess_text(text)
-                
-                results.append({
-                    "bbox": [x1, y1, x2, y2],
-                    "text": text
-                })
-                
-                if text:
-                    line_texts.append(text)
+                all_crops.append(crop_pil)
+                crop_map.append((i, j, [x1, y1, x2, y2]))
+        
+        # Run batch inference
+        if all_crops:
+            all_texts = recognize_text_batch(self.vietocr, all_crops)
+        else:
+            all_texts = []
             
-            final_lines_texts.append(" ".join(line_texts))
-            # if i % 5 == 0:
-            #     print(f"   Processed line {i+1}/{len(lines)}")
+        # Re-assemble results
+        results = []
+        line_texts_map = {i: [] for i in range(len(lines))}
+        
+        for k, text in enumerate(all_texts):
+            line_idx, box_idx, bbox = crop_map[k]
+            text = postprocess_text(text)
+            
+            results.append({
+                "bbox": bbox,
+                "text": text
+            })
+            
+            if text:
+                line_texts_map[line_idx].append(text)
+        
+        final_lines_texts = []
+        for i in range(len(lines)):
+            if i in line_texts_map:
+                final_lines_texts.append(" ".join(line_texts_map[i]))
+            else:
+                final_lines_texts.append("")
         
         # print("✅ OCR process completed.")
         full_text = "\n".join([ln for ln in final_lines_texts if ln.strip() != ""])

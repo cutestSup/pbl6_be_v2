@@ -33,3 +33,24 @@ def recognize_text(predictor, image):
     except Exception as e:
         print(f"VietOCR Error: {e}")
         return ""
+
+def recognize_text_batch(predictor, images):
+    """
+    images: List of PIL Images or numpy arrays
+    """
+    if not images:
+        return []
+        
+    pil_images = []
+    for img in images:
+        if isinstance(img, np.ndarray):
+            pil_images.append(Image.fromarray(img))
+        else:
+            pil_images.append(img)
+            
+    try:
+        texts = predictor.predict_batch(pil_images)
+        return [t.strip() for t in texts]
+    except Exception as e:
+        print(f"VietOCR Batch Error: {e}")
+        return [""] * len(images)

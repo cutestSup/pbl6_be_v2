@@ -6,9 +6,7 @@ Backend API for Vietnamese text recognition using DBNet (text detection) and Vie
 
 ### 1. Install Dependencies
 
-```bash
 pip install -r requirements.txt
-```
 
 ### 2. Configure Database
 

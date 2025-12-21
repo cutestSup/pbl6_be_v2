@@ -8,7 +8,7 @@ from PIL import Image
 cv2.setNumThreads(0)
 torch.set_num_threads(1)
 
-from app.ocr.adaptive_preprocessor import AdaptivePreprocessor
+from app.ocr.adaptive_preprocessor import SimpleTextPreprocessor
 from app.ocr.dbnet_model import load_dbnet
 from app.ocr.vietocr_model import load_vietocr, recognize_text
 from segmentation.post_processing import get_post_processing
@@ -102,7 +102,7 @@ class OCRPipeline:
         self.vietocr = load_vietocr(vietocr_cfg, vietocr_weight, str(self.device))
         
         # Load Preprocessor
-        self.preprocessor = AdaptivePreprocessor()
+        self.preprocessor = SimpleTextPreprocessor()
         
         # Load Post Processing config
         with open(dbnet_cfg, "r") as f:

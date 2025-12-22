@@ -32,8 +32,6 @@ def sort_boxes_reading_order(boxes):
     Sắp xếp boxes theo Y center với tolerance nhỏ.
     """
     if not boxes: return []
-    
-    # Filter small boxes
     clean_boxes = []
     for b in boxes:
         if len(b) < 4: continue
@@ -46,18 +44,15 @@ def sort_boxes_reading_order(boxes):
     
     heights = [b[3] - b[1] for b in clean_boxes]
     avg_h = np.median(heights) if heights else 10
-    # print(f"Median Box Height: {avg_h:.2f}")
+    print(f"Median Box Height: {avg_h:.2f}")
     
-    # Tính Y center cho mỗi box
     boxes_with_cy = [(b, (b[1] + b[3]) / 2) for b in clean_boxes]
-    boxes_with_cy.sort(key=lambda x: (x[1], x[0][0]))  # Sort theo cy, rồi x1
+    boxes_with_cy.sort(key=lambda x: (x[1], x[0][0]))
     
-    # Gom dòng: tìm dòng GẦN NHẤT có Y center distance <= 11 pixels
     lines = []
     threshold = 11.3
     
     for box, cy in boxes_with_cy:
-        # Tìm dòng GẦN NHẤT trong ngưỡng
         best_line_idx = -1
         best_distance = threshold + 1
         
@@ -74,15 +69,12 @@ def sort_boxes_reading_order(boxes):
         else:
             lines.append([box])
     
-    # Sắp xếp dòng theo Y, boxes trong dòng theo X
     lines.sort(key=lambda line: np.mean([b[1] for b in line]))
     
     final_lines = []
     for line in lines:
         line.sort(key=lambda b: b[0])
         final_lines.append(line)
-    
-    # print(f"Đã gom thành {len(final_lines)} dòng")
     
     return final_lines
 

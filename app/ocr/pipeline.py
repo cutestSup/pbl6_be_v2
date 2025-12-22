@@ -28,9 +28,6 @@ def postprocess_text(text):
     return text
 
 def sort_boxes_reading_order(boxes):
-    """
-    Sắp xếp boxes theo Y center với tolerance nhỏ.
-    """
     if not boxes: return []
     clean_boxes = []
     for b in boxes:
